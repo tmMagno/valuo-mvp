@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VALUO — Tasador online de propiedades</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --naranja: #FF5C1A;
+    --naranja-hover: #E84D0E;
+    --negro: #0A0A0A;
+    --gris-oscuro: #141414;
+    --gris-medio: #2A2A2A;
+    --gris-texto: #888;
+    --blanco: #FAFAFA;
+    --verde: #22C55E;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--negro);
+    color: var(--blanco);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* FONDO ANIMADO */
+  .bg-grid {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,92,26,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,92,26,0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .bg-glow {
+    position: fixed;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(255,92,26,0.08) 0%, transparent 65%);
+    top: -100px;
+    right: -100px;
+    pointer-events: none;
+    z-index: 0;
+    animation: glow-drift 8s ease-in-out infinite;
+  }
+
+  @keyframes glow-drift {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(-40px, 60px); }
+  }
+
+  /* HEADER */
+  header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    background: rgba(10,10,10,0.8);
+    backdrop-filter: blur(12px);
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: 0.06em;
+    color: var(--naranja);
+  }
+
+  .logo-sub {
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gris-texto);
+    font-weight: 300;
+    margin-top: 2px;
+  }
+
+  .header-badge {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gris-texto);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 6px 14px;
+    border-radius: 20px;
+  }
+
+  /* MAIN */
+  main {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 100px 24px 40px;
+  }
+
+  .quiz-container {
+    width: 100%;
+    max-width: 640px;
+  }
+
+  /* PANTALLA INTRO */
+  .screen { display: none; animation: screen-in 0.5s ease forwards; }
+  .screen.active { display: block; }
+
+  @keyframes screen-in {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* INTRO */
+  .intro-tag {
+    display: inline-block;
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--naranja);
+    border: 1px solid rgba(255,92,26,0.3);
+    padding: 6px 16px;
+    border-radius: 20px;
+    margin-bottom: 32px;
+  }
+
+  .intro-titulo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(36px, 7vw, 64px);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin-bottom: 24px;
+  }
+
+  .intro-titulo span { color: var(--naranja); }
+
+  .intro-desc {
+    font-size: 17px;
+    font-weight: 300;
+    color: var(--gris-texto);
+    line-height: 1.7;
+    margin-bottom: 40px;
+    max-width: 480px;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--naranja);
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 18px 36px;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary:hover {
+    background: var(--naranja-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(255,92,26,0.3);
+  }
+
+  .btn-primary .arrow {
+    transition: transform 0.2s ease;
+  }
+
+  .btn-primary:hover .arrow { transform: translateX(4px); }
+
+  .intro-stats {
+    display: flex;
+    gap: 40px;
+    margin-top: 48px;
+    padding-top: 48px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .stat-item { }
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 24px;
+    color: var(--blanco);
+    display: block;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--gris-texto);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 300;
+    margin-top: 4px;
+    display: block;
+  }
+
+  /* PROGRESS */
+  .progress-wrap {
+    margin-bottom: 48px;
+  }
+
+  .progress-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .progress-label {
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gris-texto);
+  }
+
+  .progress-num {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--naranja);
+  }
+
+  .progress-bar {
+    height: 2px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--naranja);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  /* PREGUNTA */
+  .pregunta-num {
+    font-size: 10px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--naranja);
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .pregunta-texto {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: clamp(24px, 5vw, 36px);
+    line-height: 1.2;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+
+  .pregunta-sub {
+    font-size: 14px;
+    color: var(--gris-texto);
+    font-weight: 300;
+    margin-bottom: 36px;
+  }
+
+  /* OPCIONES */
+  .opciones {
+    display: grid;
+    gap: 10px;
+  }
+
+  .opciones.grid-2 { grid-template-columns: 1fr 1fr; }
+  .opciones.grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  .opcion {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.8);
+    text-align: left;
+  }
+
+  .opcion:hover {
+    background: rgba(255,92,26,0.08);
+    border-color: rgba(255,92,26,0.3);
+    color: white;
+    transform: translateX(4px);
+  }
+
+  .opcion.selected {
+    background: rgba(255,92,26,0.12);
+    border-color: var(--naranja);
+    color: white;
+  }
+
+  .opcion-icon {
+    font-size: 20px;
+    width: 28px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .opcion-text { flex: 1; }
+  .opcion-check {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.15);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .opcion.selected .opcion-check {
+    background: var(--naranja);
+    border-color: var(--naranja);
+  }
+
+  .opcion.selected .opcion-check::after {
+    content: '✓';
+    font-size: 10px;
+    color: white;
+  }
+
+  /* INPUT SUPERFICIE */
+  .input-wrap {
+    position: relative;
+    margin-bottom: 24px;
+  }
+
+  .input-m2 {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 8px;
+    padding: 20px 60px 20px 20px;
+    font-size: 32px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    color: white;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .input-m2:focus {
+    border-color: var(--naranja);
+    background: rgba(255,92,26,0.04);
+  }
+
+  .input-unit {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: var(--gris-texto);
+    letter-spacing: 0.1em;
+  }
+
+  /* NAVEGACIÓN */
+  .nav-btns {
+    display: flex;
+    gap: 12px;
+    margin-top: 36px;
+    align-items: center;
+  }
+
+  .btn-back {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--gris-texto);
+    padding: 14px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .btn-back:hover {
+    border-color: rgba(255,255,255,0.25);
+    color: white;
+  }
+
+  .btn-next {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: var(--naranja);
+    color: white;
+    border: none;
+    padding: 16px 28px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .btn-next:hover:not(:disabled) {
+    background: var(--naranja-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(255,92,26,0.25);
+  }
+
+  .btn-next:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  /* RESULTADO */
+  .resultado-header {
+    margin-bottom: 40px;
+  }
+
+  .resultado-tag {
+    display: inline-block;
+    background: rgba(34,197,94,0.1);
+    border: 1px solid rgba(34,197,94,0.3);
+    color: var(--verde);
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+  }
+
+  .resultado-titulo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+
+  .resultado-sub {
+    font-size: 14px;
+    color: var(--gris-texto);
+    font-weight: 300;
+  }
+
+  .precio-card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 36px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .precio-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--naranja), transparent);
+  }
+
+  .precio-label {
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--gris-texto);
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  .precio-rango {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .precio-min, .precio-max {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(28px, 6vw, 48px);
+    color: white;
+  }
+
+  .precio-sep {
+    font-size: 24px;
+    color: var(--gris-texto);
+    font-weight: 300;
+  }
+
+  .precio-moneda {
+    font-size: 14px;
+    color: var(--naranja);
+    letter-spacing: 0.1em;
+    font-weight: 500;
+  }
+
+  .precio-m2 {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    font-size: 13px;
+    color: var(--gris-texto);
+    font-weight: 300;
+  }
+
+  .precio-m2 span { color: rgba(255,255,255,0.6); }
+
+  /* RESUMEN */
+  .resumen-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 32px;
+  }
+
+  .resumen-item {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 6px;
+    padding: 12px 16px;
+  }
+
+  .resumen-key {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gris-texto);
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .resumen-val {
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.85);
+  }
+
+  /* CTA TASADOR */
+  .cta-tasador {
+    background: linear-gradient(135deg, rgba(255,92,26,0.12), rgba(255,92,26,0.04));
+    border: 1px solid rgba(255,92,26,0.25);
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 24px;
+  }
+
+  .cta-tasador-titulo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+
+  .cta-tasador-desc {
+    font-size: 14px;
+    color: var(--gris-texto);
+    font-weight: 300;
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
+  .cta-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .form-row { display: flex; gap: 10px; }
+
+  .input-field {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    padding: 14px 16px;
+    font-size: 14px;
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .input-field::placeholder { color: rgba(255,255,255,0.25); }
+  .input-field:focus { border-color: rgba(255,92,26,0.5); }
+
+  .btn-cta {
+    width: 100%;
+    background: var(--naranja);
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .btn-cta:hover {
+    background: var(--naranja-hover);
+    box-shadow: 0 8px 32px rgba(255,92,26,0.3);
+    transform: translateY(-1px);
+  }
+
+  .cta-disclaimer {
+    text-align: center;
+    font-size: 11px;
+    color: rgba(255,255,255,0.2);
+    margin-top: 8px;
+  }
+
+  /* GRACIAS */
+  .gracias-wrap {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .gracias-icon {
+    width: 72px;
+    height: 72px;
+    background: rgba(34,197,94,0.1);
+    border: 1px solid rgba(34,197,94,0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    font-size: 28px;
+  }
+
+  .gracias-titulo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+
+  .gracias-desc {
+    font-size: 15px;
+    color: var(--gris-texto);
+    font-weight: 300;
+    line-height: 1.7;
+    max-width: 400px;
+    margin: 0 auto 32px;
+  }
+
+  .btn-reiniciar {
+    background: transparent;
+    border: 1px solid rgba(255,92,26,0.4);
+    color: var(--naranja);
+    padding: 12px 28px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    cursor: pointer;
+    margin-bottom: 24px;
+    transition: all 0.2s;
+  }
+  .btn-reiniciar:hover {
+    background: rgba(255,92,26,0.1);
+    border-color: var(--naranja);
+  }
+  .distrito-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 14px 20px;
+    font-size: 12px;
+    color: var(--gris-texto);
+  }
+
+  .distrito-badge strong {
+    font-family: 'Syne', sans-serif;
+    color: var(--naranja);
+    font-size: 14px;
+    letter-spacing: 0.06em;
+  }
+
+  /* MOBILE */
+  @media (max-width: 540px) {
+    header { padding: 16px 20px; }
+    .opciones.grid-2, .opciones.grid-3 { grid-template-columns: 1fr; }
+    .form-row { flex-direction: column; }
+    .resumen-grid { grid-template-columns: 1fr; }
+    .intro-stats { gap: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<header>
+  <div>
+    <div class="logo">VALUO</div>
+    <div class="logo-sub">by Distrito</div>
+  </div>
+  <div class="header-badge">Tasador online · Gratis</div>
+</header>
+
+<main>
+  <div class="quiz-container">
+
+    <!-- INTRO -->
+    <div class="screen active" id="screen-intro">
+      <div class="intro-tag">⚡ Resultado en 2 minutos</div>
+      <h1 class="intro-titulo">¿Cuánto vale<br>tu <span>propiedad</span><br>hoy?</h1>
+      <p class="intro-desc">Respondé 10 preguntas simples y obtené una estimación real del valor de mercado. Sin registro, sin costo, sin compromiso.</p>
+      <button class="btn-primary" onclick="startQuiz()">
+        Tasar mi propiedad
+        <span class="arrow">→</span>
+      </button>
+      <div class="intro-stats">
+        <div class="stat-item">
+          <span class="stat-num">48</span>
+          <span class="stat-label">Barrios CABA</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">2 min</span>
+          <span class="stat-label">Duración</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">100%</span>
+          <span class="stat-label">Gratuito</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUIZ -->
+    <div class="screen" id="screen-quiz">
+      <div class="progress-wrap">
+        <div class="progress-top">
+          <span class="progress-label">Progreso</span>
+          <span class="progress-num" id="progress-num">1 / 10</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill" style="width:10%"></div>
+        </div>
+      </div>
+      <div id="pregunta-container"></div>
+    </div>
+
+    <!-- RESULTADO -->
+    <div class="screen" id="screen-resultado">
+      <div class="resultado-header">
+        <div class="resultado-tag">✓ Tasación completada</div>
+        <h2 class="resultado-titulo">El valor estimado de tu propiedad</h2>
+        <p class="resultado-sub">Basado en datos reales del mercado de CABA</p>
+      </div>
+
+      <div class="precio-card">
+        <span class="precio-label">Valor de mercado estimado</span>
+        <div class="precio-rango">
+          <span class="precio-moneda">USD</span>
+          <span class="precio-min" id="precio-min">—</span>
+          <span class="precio-sep">—</span>
+          <span class="precio-moneda">USD</span>
+          <span class="precio-max" id="precio-max">—</span>
+        </div>
+        <div class="precio-m2">Precio estimado por m²: <span id="precio-m2">—</span> USD/m²</div>
+      </div>
+
+      <div class="resumen-grid" id="resumen-grid"></div>
+
+      <div class="cta-tasador">
+        <h3 class="cta-tasador-titulo">¿Querés una tasación profesional gratuita?</h3>
+        <p class="cta-tasador-desc">Un tasador matriculado visita tu propiedad, evalúa en detalle y te entrega un informe oficial. Sin costo, sin compromiso.</p>
+        <div class="cta-form">
+          <div class="form-row">
+            <input class="input-field" id="lead-nombre" type="text" placeholder="Tu nombre">
+            <input class="input-field" id="lead-tel" type="tel" placeholder="WhatsApp">
+          </div>
+          <button class="btn-cta" onclick="submitLead()">
+            Quiero que me contacten
+            <span>→</span>
+          </button>
+        </div>
+        <p class="cta-disclaimer">Sin spam · Te contactamos en menos de 1 hora</p>
+      </div>
+    </div>
+
+    <!-- GRACIAS -->
+    <div class="screen" id="screen-gracias">
+      <div class="gracias-wrap">
+        <div class="gracias-icon">✓</div>
+        <h2 class="gracias-titulo">¡Todo listo!</h2>
+        <p class="gracias-desc">Recibimos tu consulta. Un tasador profesional de Estater va a contactarte a la brevedad por WhatsApp.</p>
+        <button class="btn-reiniciar" onclick="reiniciar()">Tasar otra propiedad &rarr;</button>
+        <div class="distrito-badge">
+          <span>Una solución de</span>
+          <strong>DISTRITO</strong>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+const preguntas = [
+  {
+    id: 'tipo',
+    texto: '¿Qué tipo de propiedad es?',
+    sub: 'Seleccioná la opción que mejor describe tu inmueble',
+    tipo: 'opciones',
+    opciones: [
+      { icon: '🏢', label: 'Departamento' },
+      { icon: '🏠', label: 'PH' },
+      { icon: '🏡', label: 'Casa' },
+      { icon: '🏪', label: 'Local' },
+      { icon: '🌿', label: 'Terreno' },
+    ]
+  },
+  {
+    id: 'operacion',
+    texto: '¿Para qué operación?',
+    sub: '¿Estás pensando en vender o alquilar?',
+    tipo: 'opciones',
+    grid: 'grid-2',
+    opciones: [
+      { icon: '💰', label: 'Venta' },
+      { icon: '🔑', label: 'Alquiler' },
+    ]
+  },
+  {
+    id: 'barrio',
+    texto: '¿En qué barrio está?',
+    sub: 'Escribí el nombre del barrio de CABA',
+    tipo: 'barrio',
+  },
+  {
+    id: 'superficie',
+    texto: '¿Cuántos m² tiene?',
+    sub: 'Superficie cubierta en metros cuadrados',
+    tipo: 'numero',
+    placeholder: '65',
+    unit: 'm²'
+  },
+  {
+    id: 'ambientes',
+    texto: '¿Cuántos ambientes?',
+    sub: 'Contá living, comedor y dormitorios',
+    tipo: 'opciones',
+    grid: 'grid-3',
+    opciones: [
+      { icon: '1️⃣', label: '1 ambiente' },
+      { icon: '2️⃣', label: '2 ambientes' },
+      { icon: '3️⃣', label: '3 ambientes' },
+      { icon: '4️⃣', label: '4 ambientes' },
+      { icon: '5️⃣', label: '5 o más' },
+    ]
+  },
+  {
+    id: 'piso',
+    texto: '¿En qué piso está?',
+    sub: 'El piso y el acceso afectan el valor',
+    tipo: 'opciones',
+    opciones: [
+      { icon: '🏗️', label: 'Planta baja' },
+      { icon: '🛗', label: 'Piso 1-3 con ascensor' },
+      { icon: '🚶', label: 'Piso 1-3 sin ascensor' },
+      { icon: '⬆️', label: 'Piso 4+ con ascensor' },
+      { icon: '🏔️', label: 'Piso 4+ sin ascensor' },
+    ]
+  },
+  {
+    id: 'antiguedad',
+    texto: '¿Cuál es la antigüedad?',
+    sub: 'Año de construcción aproximado',
+    tipo: 'opciones',
+    grid: 'grid-2',
+    opciones: [
+      { icon: '✨', label: 'A estrenar' },
+      { icon: '🆕', label: 'Menos de 10 años' },
+      { icon: '📅', label: '10 a 30 años' },
+      { icon: '🏛️', label: 'Más de 30 años' },
+    ]
+  },
+  {
+    id: 'cochera',
+    texto: '¿Tiene cochera?',
+    sub: 'La cochera puede sumar entre 10% y 15% al valor',
+    tipo: 'opciones',
+    grid: 'grid-2',
+    opciones: [
+      { icon: '🚗', label: 'Sí, tiene cochera' },
+      { icon: '❌', label: 'No tiene cochera' },
+    ]
+  },
+  {
+    id: 'amenities',
+    texto: '¿Qué amenities tiene?',
+    sub: 'Los amenities impactan en el valor y la demanda',
+    tipo: 'opciones',
+    grid: 'grid-2',
+    opciones: [
+      { icon: '🚫', label: 'Ninguno' },
+      { icon: '🏊', label: 'Pileta' },
+      { icon: '💪', label: 'Gimnasio' },
+      { icon: '🎉', label: 'SUM' },
+      { icon: '🏊💪', label: 'Pileta + Gym' },
+      { icon: '⭐', label: 'Completo' },
+    ]
+  },
+  {
+    id: 'estado',
+    texto: '¿En qué estado está?',
+    sub: 'El estado general es clave para la tasación',
+    tipo: 'opciones',
+    grid: 'grid-2',
+    opciones: [
+      { icon: '🔨', label: 'A refaccionar' },
+      { icon: '👍', label: 'Bueno' },
+      { icon: '⭐', label: 'Muy bueno' },
+      { icon: '💎', label: 'Excelente' },
+    ]
+  },
+];
+
+// PRECIOS BASE por barrio (USD/m²)
+const preciosPorBarrio = {
+  'palermo': 2800, 'recoleta': 3100, 'belgrano': 2700, 'las cañitas': 2900,
+  'nuñez': 2500, 'colegiales': 2400, 'villa crespo': 2100, 'caballito': 2000,
+  'almagro': 1900, 'balvanera': 1700, 'san telmo': 2000, 'puerto madero': 4200,
+  'retiro': 2800, 'barrio norte': 2900, 'flores': 1600, 'floresta': 1500,
+  'villa urquiza': 2200, 'saavedra': 2100, 'chacarita': 2200, 'paternal': 1800,
+  'default': 2000
+};
+
+const modificadores = {
+  tipo: { 'Departamento': 1.0, 'PH': 1.05, 'Casa': 0.95, 'Local': 0.85, 'Terreno': 0.6 },
+  piso: { 'Planta baja': 0.92, 'Piso 1-3 con ascensor': 1.0, 'Piso 1-3 sin ascensor': 0.93, 'Piso 4+ con ascensor': 1.07, 'Piso 4+ sin ascensor': 0.96 },
+  antiguedad: { 'A estrenar': 1.18, 'Menos de 10 años': 1.08, '10 a 30 años': 1.0, 'Más de 30 años': 0.88 },
+  cochera: { 'Sí, tiene cochera': 1.12, 'No tiene cochera': 1.0 },
+  amenities: { 'Ninguno': 1.0, 'Pileta': 1.06, 'Gimnasio': 1.04, 'SUM': 1.03, 'Pileta + Gym': 1.09, 'Completo': 1.13 },
+  estado: { 'A refaccionar': 0.82, 'Bueno': 1.0, 'Muy bueno': 1.08, 'Excelente': 1.16 },
+  operacion: { 'Venta': 1.0, 'Alquiler': 1.0 }
+};
+
+let currentStep = 0;
+let respuestas = {};
+let barrioInput = '';
+
+const barrios = [
+  'Agronomía','Almagro','Balvanera','Barracas','Belgrano','Boedo','Caballito',
+  'Chacarita','Coghlan','Colegiales','Constitución','Flores','Floresta','La Boca',
+  'La Paternal','Las Cañitas','Liniers','Mataderos','Monte Castro','Montserrat',
+  'Nueva Pompeya','Núñez','Palermo','Parque Avellaneda','Parque Chacabuco',
+  'Parque Chas','Parque Patricios','Pompeya','Puerto Madero','Recoleta','Retiro',
+  'Saavedra','San Cristóbal','San Nicolás','San Telmo','Vélez Sársfield',
+  'Versalles','Villa Crespo','Villa del Parque','Villa Devoto','Villa General Mitre',
+  'Villa Lugano','Villa Luro','Villa Ortúzar','Villa Pueyrredón','Villa Real',
+  'Villa Riachuelo','Villa Santa Rita','Villa Soldati','Villa Urquiza'
+];
+
+function startQuiz() {
+  document.getElementById('screen-intro').classList.remove('active');
+  document.getElementById('screen-quiz').classList.add('active');
+  renderPregunta();
+}
+
+function renderPregunta() {
+  const p = preguntas[currentStep];
+  const container = document.getElementById('pregunta-container');
+  const pct = ((currentStep + 1) / preguntas.length) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-num').textContent = (currentStep + 1) + ' / ' + preguntas.length;
+
+  let html = `
+    <span class="pregunta-num">Pregunta ${currentStep + 1} de ${preguntas.length}</span>
+    <h2 class="pregunta-texto">${p.texto}</h2>
+    <p class="pregunta-sub">${p.sub}</p>
+  `;
+
+  if (p.tipo === 'opciones') {
+    const gridClass = p.grid || '';
+    html += `<div class="opciones ${gridClass}" id="opciones-wrap">`;
+    p.opciones.forEach((op, i) => {
+      const sel = respuestas[p.id] === op.label ? 'selected' : '';
+      html += `
+        <button class="opcion ${sel}" onclick="selectOpcion('${op.label}', this)">
+          <span class="opcion-icon">${op.icon}</span>
+          <span class="opcion-text">${op.label}</span>
+          <span class="opcion-check"></span>
+        </button>`;
+    });
+    html += `</div>`;
+  }
+
+  if (p.tipo === 'numero') {
+    html += `
+      <div class="input-wrap">
+        <input class="input-m2" id="input-numero" type="number" min="10" max="2000"
+          placeholder="${p.placeholder}" value="${respuestas[p.id] || ''}"
+          oninput="respuestas['${p.id}'] = this.value; updateNextBtn()">
+        <span class="input-unit">${p.unit}</span>
+      </div>`;
+  }
+
+  if (p.tipo === 'barrio') {
+    html += `
+      <div class="input-wrap" style="margin-bottom:8px">
+        <input class="input-m2" id="input-barrio" type="text" placeholder="Ej: Palermo"
+          value="${respuestas[p.id] || ''}"
+          oninput="filterBarrios(this.value)" autocomplete="off"
+          style="font-size:22px; padding:20px">
+      </div>
+      <div id="barrio-sugg" style="display:grid; gap:6px; margin-bottom:16px; max-height:200px; overflow-y:auto"></div>`;
+  }
+
+  html += `
+    <div class="nav-btns">
+      ${currentStep > 0 ? `<button class="btn-back" onclick="prevStep()">← Volver</button>` : ''}
+      <button class="btn-next" id="btn-next" onclick="nextStep()" ${!respuestas[p.id] ? 'disabled' : ''}>
+        ${currentStep === preguntas.length - 1 ? 'Ver tasación' : 'Continuar'} →
+      </button>
+    </div>`;
+
+  container.innerHTML = html;
+
+  if (p.tipo === 'barrio' && respuestas[p.id]) filterBarrios(respuestas[p.id]);
+}
+
+function filterBarrios(val) {
+  const sugg = document.getElementById('barrio-sugg');
+  if (!val || val.length < 2) { sugg.innerHTML = ''; return; }
+  const matches = barrios.filter(b => b.toLowerCase().includes(val.toLowerCase())).slice(0, 5);
+  sugg.innerHTML = matches.map(b => `
+    <button class="opcion" onclick="selectBarrio('${b}')" style="padding:12px 16px">
+      <span class="opcion-icon">📍</span>
+      <span class="opcion-text">${b}</span>
+    </button>`).join('');
+}
+
+function selectBarrio(b) {
+  respuestas['barrio'] = b;
+  document.getElementById('input-barrio').value = b;
+  document.getElementById('barrio-sugg').innerHTML = '';
+  updateNextBtn();
+}
+
+function selectOpcion(label, el) {
+  const p = preguntas[currentStep];
+  respuestas[p.id] = label;
+  document.querySelectorAll('.opcion').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  updateNextBtn();
+  setTimeout(() => nextStep(), 280);
+}
+
+function updateNextBtn() {
+  const p = preguntas[currentStep];
+  const btn = document.getElementById('btn-next');
+  if (btn) btn.disabled = !respuestas[p.id];
+}
+
+function nextStep() {
+  const p = preguntas[currentStep];
+  if (!respuestas[p.id]) return;
+  if (currentStep < preguntas.length - 1) {
+    currentStep++;
+    renderPregunta();
+  } else {
+    showResultado();
+  }
+}
+
+function prevStep() {
+  if (currentStep > 0) { currentStep--; renderPregunta(); }
+}
+
+function calcularPrecio() {
+  const barrio = (respuestas['barrio'] || '').toLowerCase();
+  let precioBase = preciosPorBarrio[barrio] || preciosPorBarrio['default'];
+  const superficie = parseFloat(respuestas['superficie']) || 60;
+
+  let factor = 1.0;
+  ['tipo','piso','antiguedad','cochera','amenities','estado'].forEach(key => {
+    const val = respuestas[key];
+    if (val && modificadores[key] && modificadores[key][val]) {
+      factor *= modificadores[key][val];
+    }
+  });
+
+  const precioM2 = Math.round(precioBase * factor);
+  const total = precioM2 * superficie;
+  const min = Math.round(total * 0.92 / 1000) * 1000;
+  const max = Math.round(total * 1.08 / 1000) * 1000;
+
+  return { min, max, precioM2 };
+}
+
+function formatNum(n) {
+  return n.toLocaleString('es-AR');
+}
+
+function showResultado() {
+  document.getElementById('screen-quiz').classList.remove('active');
+  document.getElementById('screen-resultado').classList.add('active');
+
+  const { min, max, precioM2 } = calcularPrecio();
+  document.getElementById('precio-min').textContent = formatNum(min);
+  document.getElementById('precio-max').textContent = formatNum(max);
+  document.getElementById('precio-m2').textContent = formatNum(precioM2);
+
+  const labels = {
+    tipo: 'Tipo', operacion: 'Operación', barrio: 'Barrio',
+    superficie: 'Superficie', ambientes: 'Ambientes', piso: 'Piso',
+    antiguedad: 'Antigüedad', cochera: 'Cochera', amenities: 'Amenities', estado: 'Estado'
+  };
+
+  const grid = document.getElementById('resumen-grid');
+  grid.innerHTML = Object.entries(labels).map(([k, label]) => `
+    <div class="resumen-item">
+      <span class="resumen-key">${label}</span>
+      <span class="resumen-val">${respuestas[k] || '—'}${k === 'superficie' ? ' m²' : ''}</span>
+    </div>`).join('');
+}
+
+function reiniciar() {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById("screen-inicio").classList.add("active");
+  document.getElementById("lead-nombre").value = "";
+  document.getElementById("lead-tel").value = "";
+  const btn = document.querySelector(".btn-cta");
+  if (btn) { btn.disabled = false; btn.innerHTML = "Quiero que me contacten <span>&rarr;</span>"; }
+}
+
+const MAKE_WEBHOOK_URL = 'https://hook.us2.make.com/lkpt1iios4rl5ehmt9y2kngwlqndq1z8';
+
+
+async function submitLead() {
+  const nombre = document.getElementById('lead-nombre').value.trim();
+  const tel = document.getElementById('lead-tel').value.trim();
+  if (!nombre || !tel) {
+    alert('Por favor completá tu nombre y WhatsApp');
+    return;
+  }
+
+  const btn = document.querySelector('.btn-cta');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  const { min, max, precioM2 } = calcularPrecio();
+
+  const payload = {
+    fecha: new Date().toLocaleString('es-AR'),
+    nombre,
+    whatsapp: tel,
+    barrio: respuestas['barrio'] || '',
+    tipo: respuestas['tipo'] || '',
+    operacion: respuestas['operacion'] || '',
+    superficie: respuestas['superficie'] || '',
+    ambientes: respuestas['ambientes'] || '',
+    piso: respuestas['piso'] || '',
+    antiguedad: respuestas['antiguedad'] || '',
+    cochera: respuestas['cochera'] || '',
+    amenities: respuestas['amenities'] || '',
+    estado: respuestas['estado'] || '',
+    precio_min: min,
+    precio_max: max,
+    precio_m2: precioM2,
+  };
+
+  try {
+    await fetch(MAKE_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+
+    });
+  } catch (e) {
+    console.error('Error enviando lead:', e);
+  }
+
+  document.getElementById('screen-resultado').classList.remove('active');
+  document.getElementById('screen-gracias').classList.add('active');
+}
+</script>
+</body>
+</html>
